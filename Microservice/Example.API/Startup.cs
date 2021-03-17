@@ -9,8 +9,11 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Example.API.Token;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Example.API
 {
@@ -28,6 +31,27 @@ namespace Example.API
         {
             services.AddControllers();
             services.Configure<JwtSettings>(Configuration.GetSection("JwtToken"));
+            services.AddAuthentication(x =>
+                {
+                    //x.DefaultAuthenticateScheme = authenticationProviderKey;
+                    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                })
+                //.AddJwtBearer(authenticationProviderKey, x =>
+                .AddJwtBearer(x =>
+                {
+                    x.RequireHttpsMetadata = false;
+                    x.SaveToken = true;
+                    x.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration["JwtToken:Secret"])),
+                        ValidateIssuer = true,
+                        ValidIssuer = Configuration["JwtToken:Issuer"],
+                        ValidateAudience = true,
+                        ValidAudience = Configuration["JwtToken:Audience"]
+                    };
+                });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -41,6 +65,7 @@ namespace Example.API
             app.UseHttpsRedirection();
 
             app.UseRouting();
+            app.UseAuthentication();
 
             app.UseAuthorization();
 
