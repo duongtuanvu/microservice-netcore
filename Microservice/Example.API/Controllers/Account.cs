@@ -7,8 +7,8 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Example.API.Controllers
 {
-    [ApiController]
     [Authorize]
+    [ApiController]
     [Route("api/[controller]")]
     public class Account : Controller
     {

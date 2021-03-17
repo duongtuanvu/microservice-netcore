@@ -1,4 +1,4 @@
-{
+﻿{
   "Routes": [
     // Account Api
     {
@@ -8,10 +8,30 @@
         {
           "Host": "localhost",
           "Port": 5001
+        }, // Add Load Balancing
+        {
+          "Host": "localhost",
+          "Port": 9002
         }
       ],
       "UpstreamPathTemplate": "/api/account/{todo}",
       "UpstreamHttpMethod": [ "GET", "POST" ],
+      // Add Load Balancing
+      "LoadBalancer": "RoundRobin", // "LeastConnection"
+      // Add rate limiting
+      "RateLimitOptions": {
+        "ClientWhitelist": [],
+        "EnableRateLimiting": true,
+        "Period": "1s", // Số lần request trong 1s
+        "PeriodTimespan": 1, // Thử lại sau 1s
+        "Limit": 1 // Số lần request
+      },
+      // Add QoS (QoS giống Polly)
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 2, // If the server does not response for 2 seconds, it will throw a timeout exception.
+        "DurationOfBreak": 5000, // If the server throws a second exception, the server will not be accessible for five seconds. Unit (ms)
+        "TimeoutValue": 2000
+      },
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
         "AllowedScopes": []
@@ -35,5 +55,11 @@
     }
   ],
   "GlobalConfiguration": {
+    // Custom rate limiting
+    "RateLimitOptions": {
+      "DisableRateLimitHeaders": false,
+      "QuotaExceededMessage": "Customize Tips!",
+      "HttpStatusCode": 999
+    }
   }
 }
